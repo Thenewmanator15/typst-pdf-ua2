@@ -148,7 +148,7 @@
   <div class="step"><h3>PDF 2.0 file</h3><p>Looks identical on the page. A few per cent larger than plain PDF 2.0, more if it is mostly maths.</p></div>
   <div class="step"><h3>veraPDF</h3><p>An independent validator checks 1,728 rules. It knows nothing about how the file was made.</p></div>
 </div>
-<p class="small">Where krilla knows it cannot write something PDF/UA-2 needs, for example a link that leads to a bare position on a page, it stops with an error instead of writing a file that claims PDF/UA-2 and fails. It does not catch everything: a term list still exports and fails one rule.</p>
+<p class="small">Where krilla knows it cannot write something PDF/UA-2 needs, for example a link that leads to a bare position on a page, it stops with an error instead of writing a file that claims PDF/UA-2 and fails. It does not catch everything it cannot check, such as whether a formula that needs MathML has it. The prototype checks that itself.</p>
 
 <h2 id="files">Try the files</h2>
 <p>Open a pair side by side. If you use a screen reader, the contents list, the footnote and the figure reference are the places to compare. I would like to hear what you find.</p>
@@ -257,6 +257,7 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
     <tr><td>Structure destinations: a destination can lead to a tag</td><td>8.8</td><td>On a branch</td></tr>
     <tr><td>The validator refuses what could not conform</td><td>8.8, 8.2.5.8, 8.2.5.14</td><td>On a branch</td></tr>
     <tr><td>MathML on a <code>Formula</code> tag, written as an associated file</td><td>8.2.5.29</td><td>On a branch</td></tr>
+    <tr><td>The PDF 2.0 <code>Aside</code> tag, and the list types <code>Unordered</code>, <code>Ordered</code> and <code>Description</code></td><td>8.2.5.27, 8.2.5.25</td><td>On a branch</td></tr>
   </tbody>
 </table>
 </div>
@@ -271,10 +272,13 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <li>Tags inside an element with an alternative description are left out, so a reference to a sub-figure goes to the described figure.</li>
   <li>Citations link to the number of a bibliography entry, which has a location but no tag. Those go to the nearest enclosing element that has one, as does any other link to content without a tag.</li>
   <li>Loose inline content in a block quote, or directly in the document, goes in a paragraph. Typst uses a span with block placement there, which ISO 32005 does not allow.</li>
-  <li>A caption cannot sit in a <code>Div</code> under the document, because the <code>Div</code> does not count as its parent. The prototype wraps a figure and its caption in a <code>Sect</code>.</li>
+  <li>A caption has to be a child of the element that encloses what it captions, and a <code>Div</code> does not count as that. The prototype wraps a figure and its caption in an <code>Aside</code>.</li>
   <li>MathML for each equation, from the converter that HTML export already has, handed to krilla with the <code>Formula</code> tag. It is only made when <code>ua-2</code> is asked for, because it costs about as much as laying the equation out.</li>
+  <li>A link to a place in the same document is tagged <code>Reference</code>, and only a link that leaves the document is a <code>Link</code>.</li>
+  <li>A list of terms is marked as a description list, since its terms are labels.</li>
+  <li>The filler between a contents entry and its page number is an artifact whatever it is made of, not only when it is the default row of dots.</li>
 </ol>
-<p>Items 4 to 7 only showed up when real documents were run through it. Item 9 came from reading the standard, not from veraPDF.</p>
+<p>Items 4 to 7 only showed up when real documents were run through it. Items 9 to 12 came from reading the standard: veraPDF has no rule for the first three, and the default filler already passed the fourth.</p>
 
 <h2 id="checked">What was checked</h2>
 <div class="scroll">
@@ -283,7 +287,7 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <tbody>
     <tr><td>veraPDF PDF/UA-2 on the demo, the thesis sample and the 373-page document</td><td>All pass</td></tr>
     <tr><td>veraPDF PDF/A-4f on the thesis sample and the 373-page document, exported as <code>ua-2,a-4f</code></td><td>Both pass both</td></tr>
-    <tr><td>24 one-feature documents (a list, a table, a quote, an equation and so on)</td><td>23 pass. Term lists fail clause 8.2.5.25</td></tr>
+    <tr><td>25 one-feature documents (a list, a table, a quote, an equation, figures inside other things and so on)</td><td>All pass</td></tr>
     <tr><td>A document of 4,000 different equations</td><td>Passes, with 4,000 MathML files attached</td></tr>
     <tr><td>The MathML in the PDF against the MathML of Typst's HTML export</td><td>The same</td></tr>
     <tr><td>Typst's own test suite</td><td>3,790 of 3,792 pass. The other two are PDF 2.0 outputs whose only changes are the two namespace fixes</td></tr>
@@ -299,11 +303,11 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
 <table>
   <thead><tr><th>Export</th><th>Build</th><th class="num">Time</th><th class="num">Peak memory</th><th class="num">PDF size</th></tr></thead>
   <tbody>
-    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">2.64 s</td><td class="num">957 MB</td><td class="num">7,907 KB</td></tr>
-    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">2.60 s</td><td class="num">962 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">2.63 s</td><td class="num">956 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">2.66 s</td><td class="num">963 MB</td><td class="num">7,907 KB</td></tr>
     <tr><td>PDF 2.0</td><td>Typst today</td><td class="num">2.62 s</td><td class="num">956 MB</td><td class="num">8,175 KB</td></tr>
-    <tr><td>PDF 2.0</td><td>Prototype</td><td class="num">2.60 s</td><td class="num">965 MB</td><td class="num">8,651 KB</td></tr>
-    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">2.66 s</td><td class="num">965 MB</td><td class="num">8,673 KB</td></tr>
+    <tr><td>PDF 2.0</td><td>Prototype</td><td class="num">2.65 s</td><td class="num">964 MB</td><td class="num">8,535 KB</td></tr>
+    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">2.69 s</td><td class="num">968 MB</td><td class="num">8,557 KB</td></tr>
   </tbody>
 </table>
 </div>
@@ -329,10 +333,10 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <li><strong>Nobody has tried it in a screen reader.</strong> That is the real test of an accessibility change, and it has not been done.</li>
   <li><strong>The MathML has not been heard.</strong> Equations now carry MathML, and it matches what Typst's HTML export makes, but that export is itself marked experimental, and nobody has listened to it in a screen reader that reads MathML from a PDF. Support for that in readers is still thin. veraPDF has no rule for any of it.</li>
   <li><strong>The standards were read late.</strong> The work went by veraPDF's rules first. ISO 14289-2 and ISO 32000-2 were read afterwards, and only the clauses this touches. That reading confirmed most of it and changed three things: a named destination that leads to a tag is now written the way ISO 32000-2 describes (12.3.2.4), a go-to action's structure destination is always an array (table 202), and an outline is no longer required, because PDF/UA-2 only recommends one (8.12.2).</li>
-  <li><strong>Two things the standard asks for are not done.</strong> A link to somewhere in the same document should be tagged <code>Reference</code>, not <code>Link</code> (8.2.5.20), and the dots that lead to a page number in a contents list have to be marked as artifacts (8.2.5.8). I have not checked what Typst does with the second.</li>
-  <li><strong>Some choices are allowed but may not be right.</strong> PDF/UA-2 says a caption has to be a child of the element that encloses what it captions (8.2.5.27), so wrapping a figure and its caption is right. But the prototype uses <code>Sect</code> for the wrapper, which means a section in the document's hierarchy. <code>Aside</code>, or putting the caption inside the <code>Figure</code>, is probably closer. Sending a citation to the nearest enclosing element is also my guess, not something the standard spells out.</li>
+  <li><strong>Some of it only a reader of the standard can check.</strong> Internal links are now <code>Reference</code> tags, lists of terms are description lists, and contents fillers are artifacts. veraPDF passed the files before those changes and passes them after, so it says nothing about whether they are right.</li>
+  <li><strong>Some choices are allowed but may not be right.</strong> PDF/UA-2 says a caption has to be a child of the element that encloses what it captions (8.2.5.27). The prototype wraps a figure and its caption in an <code>Aside</code>, which PDF 2.0 defines as content distinct from the rest of its parent. ISO 32005 does not allow an <code>Aside</code> in a table cell, a block quote or another <code>Aside</code>, so there it uses a <code>Sect</code>, which is allowed but a poor fit. Putting the caption inside the <code>Figure</code> would be tidier, but a reader that speaks a figure's description skips what is inside it. Sending a citation to the nearest enclosing element is also my guess, not something the standard spells out.</li>
   <li><strong>veraPDF has no rule for some things.</strong> It does not check that a footnote's number points at the note, only that the references which exist match up. It cannot tell whether alternative text is any good or the reading order makes sense.</li>
-  <li><strong>The code has shortcuts.</strong> Links split over two lines and footnotes that run on to the next page are handled but not covered by a test document. Term lists still fail.</li>
+  <li><strong>The code has shortcuts.</strong> Links split over two lines and footnotes that run on to the next page are handled but not covered by a test document.</li>
   <li><strong>It is three documents.</strong> Running a 373-page document found a bug that the 20-page one did not. More documents would find more.</li>
 </ul>
 

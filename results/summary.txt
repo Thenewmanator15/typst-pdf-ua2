@@ -4,9 +4,9 @@ Both built with Rust 1.99.0 on Windows 11.
 
 veraPDF PDF/UA-2
   document               pages  Typst today, as PDF 2.0         prototype, as PDF/UA-2
-  demo.typ                   2  fails 8 rules, 76 checks        passes, 5,190 checks
-  thesis sample             20  fails 7 rules, 391 checks       passes, 44,772 checks
-  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,396,157 checks
+  demo.typ                   2  fails 8 rules, 76 checks        passes, 5,128 checks
+  thesis sample             20  fails 7 rules, 391 checks       passes, 43,783 checks
+  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,368,975 checks
 
   The thesis sample is casson-uom-thesis 0.1.2 with its chapter and section headings
   written as blocks rather than paragraphs. Without that change 28 headings contain a
@@ -22,7 +22,11 @@ Other checks on the prototype
   ua-2 together with a-4f, thesis sample and large document: pass PDF/UA-2 and PDF/A-4f.
     ua-2 with plain a-4 is refused for a document with equations, because PDF/A-4 only
     allows attached files that are PDF/A and the MathML is an attached file
-  24 one-feature documents: 23 pass, list_terms fails 8.2.5.25
+  25 one-feature documents: all pass. figure_nested has figures with captions in a list
+    item, a table cell and a block quote
+  a `set pdf(standard: "ua-2")` rule in the document, with no command line option: passes,
+    and the equations have MathML
+  an outline with a filler that is not the default: the filler is an artifact
   mathematics (documents/large/make_math.py, 4,000 different equations): passes, with 4,000
     MathML files attached (tools/mml.py prints them)
   the MathML attached to an equation is the same as the MathML of Typst's HTML export
@@ -34,13 +38,13 @@ Other checks on the prototype
 
 Cost on the large document (tools/bench.py, five interleaved rounds, best time)
   export     build         time    peak memory    PDF size
-  PDF 1.7    Typst today   2.64 s       957 MB    7,907 KB
-  PDF 1.7    prototype     2.60 s       962 MB    7,907 KB
-  PDF/UA-1   Typst today   2.64 s       957 MB    7,927 KB
-  PDF/UA-1   prototype     2.62 s       964 MB    7,927 KB
+  PDF 1.7    Typst today   2.63 s       956 MB    7,907 KB
+  PDF 1.7    prototype     2.66 s       963 MB    7,907 KB
+  PDF/UA-1   Typst today   2.64 s       959 MB    7,927 KB
+  PDF/UA-1   prototype     2.66 s       966 MB    7,927 KB
   PDF 2.0    Typst today   2.62 s       956 MB    8,175 KB
-  PDF 2.0    prototype     2.60 s       965 MB    8,651 KB
-  PDF/UA-2   prototype     2.66 s       965 MB    8,673 KB
+  PDF 2.0    prototype     2.65 s       964 MB    8,535 KB
+  PDF/UA-2   prototype     2.69 s       968 MB    8,557 KB
 
 Cost on the mathematics document (seven interleaved rounds, best time)
   export     build         time    peak memory    PDF size
