@@ -145,7 +145,7 @@
   <div class="step"><h3>PDF 2.0 file</h3><p>Looks identical on the page. A few per cent larger than plain PDF 2.0.</p></div>
   <div class="step"><h3>veraPDF</h3><p>An independent validator checks 1,728 rules. It knows nothing about how the file was made.</p></div>
 </div>
-<p class="small">krilla refuses to write a file that claims PDF/UA-2 but could not conform, for example a link that leads to a bare position on a page. So a document either exports and passes, or you get an error saying why.</p>
+<p class="small">Where krilla knows it cannot write something PDF/UA-2 needs, for example a link that leads to a bare position on a page, it stops with an error instead of writing a file that claims PDF/UA-2 and fails. It does not catch everything: a term list still exports and fails one rule.</p>
 
 <h2 id="files">Try the files</h2>
 <p>Open a pair side by side. If you use a screen reader, the contents list, the footnote and the figure reference are the places to compare. I would like to hear what you find.</p>
