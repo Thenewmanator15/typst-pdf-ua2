@@ -1,12 +1,12 @@
-Results, 9 October 2026. veraPDF 1.30.3, profile "PDF/UA-2 + Tagged PDF" (1,728 rules).
+Results, 8 October 2026. veraPDF 1.30.3, profile "PDF/UA-2 + Tagged PDF" (1,728 rules).
 Typst today: typst/typst e58a63a, unmodified. Prototype: Thenewmanator15/typst ua2-prototype.
 Both built with Rust 1.99.0 on Windows 11.
 
 veraPDF PDF/UA-2
   document               pages  Typst today, as PDF 2.0         prototype, as PDF/UA-2
-  demo.typ                   2  fails 8 rules, 76 checks        conforms, 5,189 checks
-  thesis sample             20  fails 7 rules, 391 checks       conforms, 44,769 checks
-  large (150 chapters)     373  fails 8 rules, 47,120 checks    conforms, 3,396,156 checks
+  demo.typ                   2  fails 8 rules, 76 checks        passes, 5,190 checks
+  thesis sample             20  fails 7 rules, 391 checks       passes, 44,772 checks
+  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,396,157 checks
 
   The thesis sample is casson-uom-thesis 0.1.2 with its chapter and section headings
   written as blocks rather than paragraphs. Without that change 28 headings contain a
@@ -19,29 +19,48 @@ veraPDF PDF/UA-2
   among them the nesting rules of ISO 32005 for captions, block quotes and headings.
 
 Other checks on the prototype
-  ua-2 together with a-4, thesis sample and large document: conform to PDF/UA-2 and PDF/A-4
-  23 one-feature documents: 22 conform, list_terms fails 8.2.5.25; equation_block is refused
-    until its equation is given alternative text
+  ua-2 together with a-4f, thesis sample and large document: pass PDF/UA-2 and PDF/A-4f.
+    ua-2 with plain a-4 is refused for a document with equations, because PDF/A-4 only
+    allows attached files that are PDF/A and the MathML is an attached file
+  24 one-feature documents: 23 pass, list_terms fails 8.2.5.25
+  mathematics (documents/large/make_math.py, 4,000 different equations): passes, with 4,000
+    MathML files attached (tools/mml.py prints them)
+  the MathML attached to an equation is the same as the MathML of Typst's HTML export
   Typst's test suite: 3,790 of 3,792 pass; line-numbers-pdf-2-0 and background-artifact-2-0
     differ only by the namespace address and the namespace of the root Document
   PDF 1.7 and PDF/UA-1 output of the large document: the same bytes as Typst today, apart
     from the timestamp and the document id made from it
   thesis sample, every glyph and shape on 20 pages (12,635 items): same position
 
-Cost on the large document (tools/bench.py, nine interleaved rounds, best time)
+Cost on the large document (tools/bench.py, five interleaved rounds, best time)
   export     build         time    peak memory    PDF size
-  PDF 1.7    Typst today   2.48 s       957 MB    7,907 KB
-  PDF 1.7    prototype     2.47 s       962 MB    7,907 KB
-  PDF/UA-1   Typst today   2.50 s       956 MB    7,927 KB
-  PDF/UA-1   prototype     2.51 s       962 MB    7,927 KB
-  PDF 2.0    Typst today   2.46 s       957 MB    8,175 KB
-  PDF 2.0    prototype     2.51 s       964 MB    8,566 KB
-  PDF/UA-2   prototype     2.47 s       965 MB    8,586 KB
+  PDF 1.7    Typst today   2.64 s       957 MB    7,907 KB
+  PDF 1.7    prototype     2.60 s       962 MB    7,907 KB
+  PDF/UA-1   Typst today   2.64 s       957 MB    7,927 KB
+  PDF/UA-1   prototype     2.62 s       964 MB    7,927 KB
+  PDF 2.0    Typst today   2.62 s       956 MB    8,175 KB
+  PDF 2.0    prototype     2.60 s       965 MB    8,651 KB
+  PDF/UA-2   prototype     2.66 s       965 MB    8,673 KB
 
-"Conforms" above means "passes veraPDF". ISO 14289-2, 8.2.5.29 requires mathematical
-expressions to be given as MathML, which veraPDF does not check and the prototype does not
-do. All three documents contain an equation, so none of them fully conforms.
+Cost on the mathematics document (seven interleaved rounds, best time)
+  export     build         time    peak memory    PDF size
+  PDF 1.7    Typst today   0.58 s       202 MB    2,976 KB
+  PDF 1.7    prototype     0.58 s       203 MB    2,976 KB
+  PDF/UA-1   Typst today   0.64 s       213 MB    3,193 KB
+  PDF/UA-1   prototype     0.64 s       214 MB    3,193 KB
+  PDF 2.0    Typst today   0.57 s       202 MB    3,020 KB
+  PDF 2.0    prototype     0.58 s       203 MB    3,022 KB
+  PDF/UA-2   prototype     0.88 s       230 MB    5,441 KB
 
-Not done: no screen reader has been tried, and nobody who knows the PDF specification well
-has reviewed the code. ISO 14289-2 and ISO 32000-2 were read after the work was done, and
-only the clauses it touches.
+  MathML is only made when ua-2 is asked for. When it was made for every export, PDF 1.7
+  took 1.05 s here instead of 0.58 s. Without sharing the work between layout passes,
+  PDF/UA-2 took 1.13 s instead of 0.88 s.
+
+"Passes" means "passes veraPDF", which is not the same as conforming. ISO 14289-2,
+8.2.5.29 requires mathematical expressions to be given as MathML, and veraPDF has no rule
+for it: these documents passed before their equations had MathML, and pass now that they
+do.
+
+Not done: no screen reader has been tried, on the tags or on the MathML, and nobody who
+knows the PDF specification well has reviewed the code. ISO 14289-2 and ISO 32000-2 were
+read after most of the work was done, and only the clauses it touches.
