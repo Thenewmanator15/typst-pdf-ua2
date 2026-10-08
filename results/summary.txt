@@ -56,9 +56,9 @@ Cost on the mathematics document (five interleaved rounds, best time)
   PDF 2.0    prototype     0.55 s       203 MB    3,024 KB
   PDF/UA-2   prototype     0.84 s       229 MB    5,443 KB
 
-  MathML is only made when ua-2 is asked for. When it was made for every export, PDF 1.7
-  took 1.05 s here instead of 0.58 s. Without sharing the work between layout passes,
-  PDF/UA-2 took 1.13 s instead of 0.88 s.
+  MathML is only made when ua-2 is asked for. In an earlier run, when it was made for
+  every export, PDF 1.7 took 1.05 s here instead of 0.58 s, and without sharing the work
+  between layout passes PDF/UA-2 took 1.13 s instead of 0.88 s.
 
 "Passes" means "passes veraPDF", which is not the same as conforming. ISO 14289-2,
 8.2.5.29 requires mathematical expressions to be given as MathML, and veraPDF has no rule
