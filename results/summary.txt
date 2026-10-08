@@ -38,6 +38,10 @@ Cost on the large document (tools/bench.py, nine interleaved rounds, best time)
   PDF 2.0    prototype     2.51 s       964 MB    8,566 KB
   PDF/UA-2   prototype     2.47 s       965 MB    8,586 KB
 
-Not done: no screen reader has been tried, ISO 14289-2 and ISO 32000-2 were not read (the
-work went by veraPDF's rules), and nobody who knows the PDF specification well has reviewed
-the code.
+"Conforms" above means "passes veraPDF". ISO 14289-2, 8.2.5.29 requires mathematical
+expressions to be given as MathML, which veraPDF does not check and the prototype does not
+do. All three documents contain an equation, so none of them fully conforms.
+
+Not done: no screen reader has been tried, and nobody who knows the PDF specification well
+has reviewed the code. ISO 14289-2 and ISO 32000-2 were read after the work was done, and
+only the clauses it touches.

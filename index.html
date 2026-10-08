@@ -107,7 +107,7 @@
 <main>
 
 <div class="note">
-  <strong>Read this first.</strong> This is a prototype, and the code was written with Claude, an AI assistant. Nobody who knows the PDF specification well has reviewed it, and nobody has tried the output in a screen reader yet. It is here to be looked at, not merged. Typst does not accept AI-written code, so none of this is offered to Typst as a pull request.
+  <strong>Read this first.</strong> This is a prototype, and the code was written with Claude, an AI assistant. Nobody who knows the PDF specification well has reviewed it, nobody has tried the output in a screen reader yet, and equations are not done the way PDF/UA-2 requires. It is here to be looked at, not merged. Typst does not accept AI-written code, so none of this is offered to Typst as a pull request.
 </div>
 
 <h2 id="result">Result</h2>
@@ -117,23 +117,26 @@
   <div class="card">
     <h3>A two-page demo</h3>
     <div class="row"><span>Typst today</span><span class="pill bad">8 rules fail</span></div>
-    <div class="row"><span>Prototype</span><span class="pill good">Conforms</span></div>
+    <div class="row"><span>Prototype</span><span class="pill good">Passes veraPDF</span></div>
     <p class="small">One of each thing: contents, headings, a footnote, a figure, a table, an equation, a quote.</p>
   </div>
   <div class="card">
     <h3>A 20-page thesis sample</h3>
     <div class="row"><span>Typst today</span><span class="pill bad">7 rules fail</span></div>
-    <div class="row"><span>Prototype</span><span class="pill good">Conforms</span></div>
+    <div class="row"><span>Prototype</span><span class="pill good">Passes veraPDF</span></div>
     <p class="small">The sample from the University of Manchester thesis template, with citations and lists of figures and tables.</p>
   </div>
   <div class="card">
     <h3>A 373-page document</h3>
     <div class="row"><span>Typst today</span><span class="pill bad">8 rules fail</span></div>
-    <div class="row"><span>Prototype</span><span class="pill good">Conforms</span></div>
+    <div class="row"><span>Prototype</span><span class="pill good">Passes veraPDF</span></div>
     <p class="small">Generated: 1,800 footnotes, cross-references, citations, 300 figures and tables. 3.4 million checks.</p>
   </div>
 </div>
 <p>The pages look the same in both. On the thesis sample, all 12,635 glyphs and shapes sit in exactly the same place. The difference is in the tags that assistive technology reads.</p>
+<div class="note">
+  <strong>Passing veraPDF is not the same as conforming.</strong> PDF/UA-2 says mathematical expressions have to be given as MathML (clause 8.2.5.29). veraPDF does not check that, and the prototype only gives an equation a text description. All three documents contain an equation, so they pass the validator without fully conforming. A document with no maths in it does not have this problem.
+</div>
 
 <h2 id="flow">How a document gets there</h2>
 <p>Typst lays the document out and decides what the tags are. <a href="https://github.com/LaurenzV/krilla">krilla</a>, the library it uses to write PDFs, turns that into the file. Both needed changes, shown in green.</p>
@@ -259,9 +262,9 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
 <table>
   <thead><tr><th>Check</th><th>Result</th></tr></thead>
   <tbody>
-    <tr><td>veraPDF PDF/UA-2 on the demo, the thesis sample and the 373-page document</td><td>All conform</td></tr>
-    <tr><td>veraPDF PDF/A-4 on the thesis sample and the 373-page document, exported as <code>ua-2,a-4</code></td><td>Both conform to both</td></tr>
-    <tr><td>23 one-feature documents (a list, a table, a quote, a footnote and so on)</td><td>22 conform. Term lists fail clause 8.2.5.25</td></tr>
+    <tr><td>veraPDF PDF/UA-2 on the demo, the thesis sample and the 373-page document</td><td>All pass</td></tr>
+    <tr><td>veraPDF PDF/A-4 on the thesis sample and the 373-page document, exported as <code>ua-2,a-4</code></td><td>Both pass both</td></tr>
+    <tr><td>23 one-feature documents (a list, a table, a quote, a footnote and so on)</td><td>22 pass. Term lists fail clause 8.2.5.25</td></tr>
     <tr><td>Typst's own test suite</td><td>3,790 of 3,792 pass. The other two are PDF 2.0 outputs whose only changes are the two namespace fixes</td></tr>
     <tr><td>krilla's test suite, at each commit</td><td>All pass</td></tr>
     <tr><td>PDF 1.7 and PDF/UA-1 output from the prototype</td><td>Unchanged from Typst today, apart from the timestamp and the document id made from it</td></tr>
@@ -289,10 +292,12 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
 <p>Passing a validator is necessary, but it is not the same as being right. These need a person.</p>
 <ul class="plain">
   <li><strong>Nobody has tried it in a screen reader.</strong> That is the real test of an accessibility change, and it has not been done.</li>
-  <li><strong>The standard itself was not read.</strong> The work went by veraPDF's rules and their descriptions, not by ISO 14289-2 or ISO 32000-2.</li>
-  <li><strong>Some choices are allowed but may not be right.</strong> <code>Sect</code> as the wrapper for a figure and its caption passes, but I do not know that it is the right meaning. The same goes for sending a citation to the nearest enclosing element.</li>
+  <li><strong>Equations do not conform.</strong> PDF/UA-2 requires MathML for mathematical expressions, as tags or as a file attached to the formula (clause 8.2.5.29). Neither krilla nor the prototype can write that yet. This is the largest gap, and veraPDF is silent about it.</li>
+  <li><strong>The standards were read late.</strong> The work went by veraPDF's rules first. ISO 14289-2 and ISO 32000-2 were read afterwards, and only the clauses this touches. That reading confirmed most of it and changed three things: a named destination that leads to a tag is now written the way ISO 32000-2 describes (12.3.2.4), a go-to action's structure destination is always an array (table 202), and an outline is no longer required, because PDF/UA-2 only recommends one (8.12.2).</li>
+  <li><strong>Two things the standard asks for are not done.</strong> A link to somewhere in the same document should be tagged <code>Reference</code>, not <code>Link</code> (8.2.5.20), and the dots that lead to a page number in a contents list have to be marked as artifacts (8.2.5.8). I have not checked what Typst does with the second.</li>
+  <li><strong>Some choices are allowed but may not be right.</strong> PDF/UA-2 says a caption has to be a child of the element that encloses what it captions (8.2.5.27), so wrapping a figure and its caption is right. But the prototype uses <code>Sect</code> for the wrapper, which means a section in the document's hierarchy. <code>Aside</code>, or putting the caption inside the <code>Figure</code>, is probably closer. Sending a citation to the nearest enclosing element is also my guess, not something the standard spells out.</li>
   <li><strong>veraPDF has no rule for some things.</strong> It does not check that a footnote's number points at the note, only that the references which exist match up. It cannot tell whether alternative text is any good or the reading order makes sense.</li>
-  <li><strong>The code has shortcuts.</strong> Links split over two lines and footnotes that run on to the next page are handled but not covered by a test document. Term lists still fail. Maths is described with alternative text, not MathML.</li>
+  <li><strong>The code has shortcuts.</strong> Links split over two lines and footnotes that run on to the next page are handled but not covered by a test document. Term lists still fail.</li>
   <li><strong>It is three documents.</strong> Running a 373-page document found a bug that the 20-page one did not. More documents would find more.</li>
 </ul>
 
@@ -309,7 +314,7 @@ verapdf --flavour ua2 document.pdf</code></pre>
 <h3>Where everything is</h3>
 <ul class="plain">
   <li><a href="https://github.com/Thenewmanator15/typst/tree/ua2-prototype">The Typst prototype</a>, with <a href="https://github.com/Thenewmanator15/typst/blob/ua2-prototype/PROTOTYPE.md">notes on its shortcuts</a></li>
-  <li><a href="https://github.com/Thenewmanator15/krilla/tree/ua2-structure-destinations">The krilla branch</a>, six commits on krilla main</li>
+  <li><a href="https://github.com/Thenewmanator15/krilla/tree/ua2-structure-destinations">The krilla branch</a>, on top of krilla main</li>
   <li><a href="https://github.com/LaurenzV/krilla/issues/449">krilla issue 449</a>, where this is being discussed, and <a href="https://github.com/typst/typst/issues/7006">Typst's PDF/UA-2 tracking issue</a></li>
   <li><a href="https://github.com/Thenewmanator15/typst-pdf-ua2">This page's repository</a>, with the test documents, the scripts and the results</li>
 </ul>
