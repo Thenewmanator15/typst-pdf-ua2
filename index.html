@@ -259,6 +259,7 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
     <tr><td>MathML on a <code>Formula</code> tag, written as an associated file</td><td>8.2.5.29</td><td>On a branch</td></tr>
     <tr><td>The PDF 2.0 <code>Aside</code> tag, and the list types <code>Unordered</code>, <code>Ordered</code> and <code>Description</code></td><td>8.2.5.27, 8.2.5.25</td><td>On a branch</td></tr>
     <tr><td>The <code>NoteType</code> of a footnote, and an ARIA role on any tag</td><td>8.2.5.14, 8.2.5.31</td><td>On a branch</td></tr>
+    <tr><td>The <code>Artifact</code> tag, for an artifact that belongs next to real content</td><td>8.3.2</td><td>On a branch</td></tr>
   </tbody>
 </table>
 </div>
@@ -282,8 +283,10 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <li>A footnote says that it is a footnote, and a list says which bullet or numbering it uses.</li>
   <li>The bibliography is a section with the role <code>doc-bibliography</code>.</li>
   <li>Heading levels may skip, which PDF/UA-1 forbade and PDF/UA-2 deliberately allows.</li>
+  <li>Each heading opens a section that runs to the next heading of the same or a higher level, so a reader can skip a whole section.</li>
+  <li>The number of a numbered line is an <code>Artifact</code> element at the start of its line, not a loose mark in the margin.</li>
 </ol>
-<p>Items 4 to 7 only showed up when real documents were run through it. Items 9 to 16 came from reading the standard, the last four from going through every clause of it. veraPDF has no rule for any of them: it passed the files before each change and after.</p>
+<p>Items 4 to 7 only showed up when real documents were run through it. Items 9 to 18 came from reading the standard, the last six from going through every clause of it. veraPDF has no rule for any of them: it passed the files before each change and after.</p>
 
 <h2 id="checked">What was checked</h2>
 <div class="scroll">
@@ -292,7 +295,7 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <tbody>
     <tr><td>veraPDF PDF/UA-2 on the demo, the thesis sample and the 373-page document</td><td>All pass</td></tr>
     <tr><td>veraPDF PDF/A-4f on the thesis sample and the 373-page document, exported as <code>ua-2,a-4f</code></td><td>Both pass both</td></tr>
-    <tr><td>29 one-feature documents (a list, a table, a quote, an equation, a bibliography, figures inside other things and so on)</td><td>All pass</td></tr>
+    <tr><td>32 one-feature documents (a list, a table, a quote, an equation, a bibliography, numbered lines, figures inside other things and so on)</td><td>All pass</td></tr>
     <tr><td>A paragraph, a table and a footnote that each run over two pages</td><td>Each stays one element</td></tr>
     <tr><td>Content drawn outside any tag or artifact, in the demo and the thesis sample</td><td>None</td></tr>
     <tr><td>A document of 4,000 different equations</td><td>Passes, with 4,000 MathML files attached</td></tr>
@@ -310,11 +313,11 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
 <table>
   <thead><tr><th>Export</th><th>Build</th><th class="num">Time</th><th class="num">Peak memory</th><th class="num">PDF size</th></tr></thead>
   <tbody>
-    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">2.63 s</td><td class="num">956 MB</td><td class="num">7,907 KB</td></tr>
-    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">2.66 s</td><td class="num">963 MB</td><td class="num">7,907 KB</td></tr>
-    <tr><td>PDF 2.0</td><td>Typst today</td><td class="num">2.62 s</td><td class="num">956 MB</td><td class="num">8,175 KB</td></tr>
-    <tr><td>PDF 2.0</td><td>Prototype</td><td class="num">2.65 s</td><td class="num">964 MB</td><td class="num">8,535 KB</td></tr>
-    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">2.69 s</td><td class="num">968 MB</td><td class="num">8,557 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">2.52 s</td><td class="num">956 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">2.51 s</td><td class="num">962 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 2.0</td><td>Typst today</td><td class="num">2.51 s</td><td class="num">956 MB</td><td class="num">8,175 KB</td></tr>
+    <tr><td>PDF 2.0</td><td>Prototype</td><td class="num">2.53 s</td><td class="num">968 MB</td><td class="num">8,656 KB</td></tr>
+    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">2.57 s</td><td class="num">972 MB</td><td class="num">8,678 KB</td></tr>
   </tbody>
 </table>
 </div>
@@ -324,15 +327,15 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
 <table>
   <thead><tr><th>Export</th><th>Build</th><th class="num">Time</th><th class="num">Peak memory</th><th class="num">PDF size</th></tr></thead>
   <tbody>
-    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">0.58 s</td><td class="num">202 MB</td><td class="num">2,976 KB</td></tr>
-    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">0.58 s</td><td class="num">203 MB</td><td class="num">2,976 KB</td></tr>
-    <tr><td>PDF/UA-1</td><td>Typst today</td><td class="num">0.64 s</td><td class="num">213 MB</td><td class="num">3,193 KB</td></tr>
-    <tr><td>PDF/UA-1</td><td>Prototype</td><td class="num">0.64 s</td><td class="num">214 MB</td><td class="num">3,193 KB</td></tr>
-    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">0.88 s</td><td class="num">230 MB</td><td class="num">5,441 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">0.54 s</td><td class="num">202 MB</td><td class="num">2,976 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">0.55 s</td><td class="num">203 MB</td><td class="num">2,976 KB</td></tr>
+    <tr><td>PDF/UA-1</td><td>Typst today</td><td class="num">0.61 s</td><td class="num">213 MB</td><td class="num">3,193 KB</td></tr>
+    <tr><td>PDF/UA-1</td><td>Prototype</td><td class="num">0.61 s</td><td class="num">214 MB</td><td class="num">3,193 KB</td></tr>
+    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">0.84 s</td><td class="num">229 MB</td><td class="num">5,443 KB</td></tr>
   </tbody>
 </table>
 </div>
-<p class="small">Best of five runs for the first table and seven for the second, with the builds interleaved. Both builds are from the same Typst commit with the same compiler. The machine was in use, so differences of a few hundredths of a second mean nothing. The second document is the worst case for MathML: nothing but equations, none alike. There PDF/UA-2 takes about a third longer than PDF/UA-1 and the file is 70% larger, about 560 bytes an equation. Exports that do not ask for <code>ua-2</code> pay nothing, because the MathML is not made for them.</p>
+<p class="small">Best of five runs for each, with the builds interleaved. Both builds are from the same Typst commit with the same compiler. The machine was in use, so differences of a few hundredths of a second mean nothing. The second document is the worst case for MathML: nothing but equations, none alike. There PDF/UA-2 takes about a third longer than PDF/UA-1 and the file is 70% larger, about 560 bytes an equation. Exports that do not ask for <code>ua-2</code> pay nothing, because the MathML is not made for them.</p>
 
 <h2 id="limits">What it doesn't show</h2>
 <p>Passing a validator is necessary, but it is not the same as being right. These need a person.</p>
@@ -340,9 +343,9 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <li><strong>Nobody has tried it in a screen reader.</strong> That is the real test of an accessibility change, and it has not been done.</li>
   <li><strong>The MathML has not been heard.</strong> Equations now carry MathML, and it matches what Typst's HTML export makes, but that export is itself marked experimental, and nobody has listened to it in a screen reader that reads MathML from a PDF. Support for that in readers is still thin. veraPDF has no rule for any of it.</li>
   <li><strong>The standard was read after the code, not before.</strong> The work went by veraPDF's rules first. I have since been through every clause of section 8 of ISO 14289-2, and the parts of ISO 32000-2 it points to. That changed how named destinations are written, dropped a requirement for an outline that PDF/UA-2 does not make, and added MathML and items 9 to 16 above. Most of the rest does not apply, because Typst cannot produce forms, media, redactions or ruby text.</li>
-  <li><strong>Three things from that reading are not done.</strong> Line numbers should be <code>Artifact</code> elements in the tag tree, and are plain artifacts (8.3.2). Headings are not grouped into <code>Sect</code> elements, which the standard recommends (8.2.5.5). And when an equation is given a written description, its number is not labelled, because Typst leaves out the tags inside anything that has a description.</li>
-  <li><strong>Some of it only a reader of the standard can check.</strong> veraPDF passed the files before items 9 to 16 and passes them after, so it says nothing about whether those are right. They rest on my reading of the clauses.</li>
-  <li><strong>Some choices are allowed but may not be right.</strong> PDF/UA-2 says a caption has to be a child of the element that encloses what it captions (8.2.5.27). The prototype wraps a figure and its caption in an <code>Aside</code>, which PDF 2.0 defines as content distinct from the rest of its parent. ISO 32005 does not allow an <code>Aside</code> in a table cell, a block quote or another <code>Aside</code>, so there it uses a <code>Sect</code>, which is allowed but a poor fit. Putting the caption inside the <code>Figure</code> would be tidier, but a reader that speaks a figure's description skips what is inside it. Sending a citation to the nearest enclosing element is also my guess, not something the standard spells out.</li>
+  <li><strong>Two things from that reading are not done.</strong> When an equation is given a written description, its number is not labelled, because Typst leaves out the tags inside anything that has a description. And only headings that sit directly in the document open a section; one inside a block or a column layout does not.</li>
+  <li><strong>Some of it only a reader of the standard can check.</strong> veraPDF passed the files before items 9 to 18 and passes them after, so it says nothing about whether those are right. They rest on my reading of the clauses.</li>
+  <li><strong>Some choices are allowed but may not be right.</strong> PDF/UA-2 says a caption has to be a child of the element that encloses what it captions (8.2.5.27). The prototype wraps a figure and its caption in an <code>Aside</code>. ISO 32005 does not allow an <code>Aside</code> in a table cell, a block quote or another <code>Aside</code>, so there it uses a <code>Sect</code>. I tried the alternatives there: <code>Div</code>, <code>Part</code> and <code>NonStruct</code> all fail, because they do not count as the caption's parent, and ISO 32000-2 does define <code>Sect</code> as a grouping of elements with regard to their hierarchy, so it is the right element of those that are allowed. The other way would be to put the caption inside the <code>Figure</code>, but a reader that speaks a figure's description skips what is inside it. Sending a citation to the nearest enclosing element is also my guess, not something the standard spells out.</li>
   <li><strong>veraPDF has no rule for some things.</strong> It does not check that a footnote's number points at the note, only that the references which exist match up. It cannot tell whether alternative text is any good or the reading order makes sense.</li>
   <li><strong>The code has shortcuts.</strong> Links split over two lines and footnotes that run on to the next page are handled but not covered by a test document.</li>
   <li><strong>It is three documents.</strong> Running a 373-page document found a bug that the 20-page one did not. More documents would find more.</li>

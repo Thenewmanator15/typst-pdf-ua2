@@ -4,9 +4,9 @@ Both built with Rust 1.99.0 on Windows 11.
 
 veraPDF PDF/UA-2
   document               pages  Typst today, as PDF 2.0         prototype, as PDF/UA-2
-  demo.typ                   2  fails 8 rules, 76 checks        passes, 5,128 checks
-  thesis sample             20  fails 7 rules, 391 checks       passes, 43,817 checks
-  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,369,009 checks
+  demo.typ                   2  fails 8 rules, 76 checks        passes, 5,230 checks
+  thesis sample             20  fails 7 rules, 391 checks       passes, 44,735 checks
+  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,389,443 checks
 
   The thesis sample is casson-uom-thesis 0.1.2 with its chapter and section headings
   written as blocks rather than paragraphs. Without that change 28 headings contain a
@@ -22,7 +22,7 @@ Other checks on the prototype
   ua-2 together with a-4f, thesis sample and large document: pass PDF/UA-2 and PDF/A-4f.
     ua-2 with plain a-4 is refused for a document with equations, because PDF/A-4 only
     allows attached files that are PDF/A and the MathML is an attached file
-  29 one-feature documents: all pass. figure_nested has figures with captions in a list
+  32 one-feature documents: all pass. figure_nested has figures with captions in a list
     item, a table cell and a block quote
   a `set pdf(standard: "ua-2")` rule in the document, with no command line option: passes,
     and the equations have MathML
@@ -38,23 +38,23 @@ Other checks on the prototype
 
 Cost on the large document (tools/bench.py, five interleaved rounds, best time)
   export     build         time    peak memory    PDF size
-  PDF 1.7    Typst today   2.63 s       956 MB    7,907 KB
-  PDF 1.7    prototype     2.66 s       963 MB    7,907 KB
-  PDF/UA-1   Typst today   2.64 s       959 MB    7,927 KB
-  PDF/UA-1   prototype     2.66 s       966 MB    7,927 KB
-  PDF 2.0    Typst today   2.62 s       956 MB    8,175 KB
-  PDF 2.0    prototype     2.65 s       964 MB    8,535 KB
-  PDF/UA-2   prototype     2.69 s       968 MB    8,557 KB
+  PDF 1.7    Typst today   2.52 s       956 MB    7,907 KB
+  PDF 1.7    prototype     2.51 s       962 MB    7,907 KB
+  PDF/UA-1   Typst today   2.53 s       957 MB    7,927 KB
+  PDF/UA-1   prototype     2.55 s       969 MB    7,927 KB
+  PDF 2.0    Typst today   2.51 s       956 MB    8,175 KB
+  PDF 2.0    prototype     2.53 s       968 MB    8,656 KB
+  PDF/UA-2   prototype     2.57 s       972 MB    8,678 KB
 
-Cost on the mathematics document (seven interleaved rounds, best time)
+Cost on the mathematics document (five interleaved rounds, best time)
   export     build         time    peak memory    PDF size
-  PDF 1.7    Typst today   0.58 s       202 MB    2,976 KB
-  PDF 1.7    prototype     0.58 s       203 MB    2,976 KB
-  PDF/UA-1   Typst today   0.64 s       213 MB    3,193 KB
-  PDF/UA-1   prototype     0.64 s       214 MB    3,193 KB
-  PDF 2.0    Typst today   0.57 s       202 MB    3,020 KB
-  PDF 2.0    prototype     0.58 s       203 MB    3,022 KB
-  PDF/UA-2   prototype     0.88 s       230 MB    5,441 KB
+  PDF 1.7    Typst today   0.54 s       202 MB    2,976 KB
+  PDF 1.7    prototype     0.55 s       203 MB    2,976 KB
+  PDF/UA-1   Typst today   0.61 s       213 MB    3,193 KB
+  PDF/UA-1   prototype     0.61 s       214 MB    3,193 KB
+  PDF 2.0    Typst today   0.55 s       203 MB    3,020 KB
+  PDF 2.0    prototype     0.55 s       203 MB    3,024 KB
+  PDF/UA-2   prototype     0.84 s       229 MB    5,443 KB
 
   MathML is only made when ua-2 is asked for. When it was made for every export, PDF 1.7
   took 1.05 s here instead of 0.58 s. Without sharing the work between layout passes,
@@ -75,9 +75,17 @@ work was done, and the parts of ISO 32000-2 it points to. Checked on the way:
   with ua-2, a document whose heading levels skip is exported (8.2.5.12 does not ask for
     them to follow on)
 
-Not done from that reading: line numbers are plain artifacts, not Artifact structure
-elements (8.3.2); headings are not grouped into Sect elements (8.2.5.5, a
-recommendation); the number of an equation that has alt text is not labelled.
+Also from that reading: each heading directly in the document opens a Sect that runs to
+the next heading of the same or a higher level (8.2.5.5), and the number of a numbered
+line is an Artifact structure element at the start of its line (8.3.2). In a document
+with two columns over two pages, all 46 numbers are at their own lines.
+
+The wrapper of a figure and its caption in a table cell, a block quote or another figure
+is a Sect. Div, Part and NonStruct were tried there and fail (Table 5, TD-Caption and
+Aside-Caption, and 8.2.5.27), because they do not count as the caption's parent.
+
+Not done from that reading: the number of an equation that has alt text is not labelled,
+and a heading inside another element, such as a block, does not open a section.
 
 Not done at all: no screen reader has been tried, on the tags or on the MathML, and
 nobody who knows the PDF specification well has reviewed the code.

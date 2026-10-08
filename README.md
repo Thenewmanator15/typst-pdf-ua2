@@ -9,12 +9,12 @@ request, since Typst does not accept AI-written code.
 
 - `index.html`: the page.
 - `pdf/`: the same documents exported by Typst today and by the prototype.
-- `documents/`: the demo, 29 one-feature documents, a test of the thesis template's heading
+- `documents/`: the demo, 32 one-feature documents, a test of the thesis template's heading
   levels, and the generators for the 373-page document and for a document of equations.
 - `tools/`: `check.sh` compiles and validates the documents, `bench.py` times two builds,
   `structdump.py` prints where a tag sits in a PDF's structure tree, `svgpos.py` compares
-  where everything is drawn on the pages of two builds, and `mml.py` prints the MathML
-  attached to a PDF.
+  where everything is drawn on the pages of two builds, `mml.py` prints the MathML
+  attached to a PDF, and `treedump.py` prints the tag tree of a PDF made with `--pretty`.
 - `results/summary.txt`: the numbers.
 
 The code itself is on two branches:
