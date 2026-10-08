@@ -1,0 +1,8 @@
+smith2020:
+  type: article
+  title: A title
+  author: Smith, Jane
+  date: 2020
+  parent:
+    type: periodical
+    title: A Journal

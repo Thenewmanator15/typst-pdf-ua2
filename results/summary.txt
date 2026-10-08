@@ -5,8 +5,8 @@ Both built with Rust 1.99.0 on Windows 11.
 veraPDF PDF/UA-2
   document               pages  Typst today, as PDF 2.0         prototype, as PDF/UA-2
   demo.typ                   2  fails 8 rules, 76 checks        passes, 5,128 checks
-  thesis sample             20  fails 7 rules, 391 checks       passes, 43,783 checks
-  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,368,975 checks
+  thesis sample             20  fails 7 rules, 391 checks       passes, 43,817 checks
+  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,369,009 checks
 
   The thesis sample is casson-uom-thesis 0.1.2 with its chapter and section headings
   written as blocks rather than paragraphs. Without that change 28 headings contain a
@@ -22,7 +22,7 @@ Other checks on the prototype
   ua-2 together with a-4f, thesis sample and large document: pass PDF/UA-2 and PDF/A-4f.
     ua-2 with plain a-4 is refused for a document with equations, because PDF/A-4 only
     allows attached files that are PDF/A and the MathML is an attached file
-  25 one-feature documents: all pass. figure_nested has figures with captions in a list
+  29 one-feature documents: all pass. figure_nested has figures with captions in a list
     item, a table cell and a block quote
   a `set pdf(standard: "ua-2")` rule in the document, with no command line option: passes,
     and the equations have MathML
@@ -65,6 +65,19 @@ Cost on the mathematics document (seven interleaved rounds, best time)
 for it: these documents passed before their equations had MathML, and pass now that they
 do.
 
-Not done: no screen reader has been tried, on the tags or on the MathML, and nobody who
-knows the PDF specification well has reviewed the code. ISO 14289-2 and ISO 32000-2 were
-read after most of the work was done, and only the clauses it touches.
+Read against the standard: every clause of section 8 of ISO 14289-2, after most of the
+work was done, and the parts of ISO 32000-2 it points to. Checked on the way:
+  a paragraph, a table and a footnote that each run over two pages stay one element
+  nothing is drawn outside a tag or an artifact in the demo and the thesis sample
+  the number of a numbered equation is an Lbl, a footnote has NoteType Footnote, the
+    ListNumbering of a list follows its marker or numbering, and the bibliography is a
+    Sect with the role doc-bibliography
+  with ua-2, a document whose heading levels skip is exported (8.2.5.12 does not ask for
+    them to follow on)
+
+Not done from that reading: line numbers are plain artifacts, not Artifact structure
+elements (8.3.2); headings are not grouped into Sect elements (8.2.5.5, a
+recommendation); the number of an equation that has alt text is not labelled.
+
+Not done at all: no screen reader has been tried, on the tags or on the MathML, and
+nobody who knows the PDF specification well has reviewed the code.

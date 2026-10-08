@@ -9,7 +9,7 @@ request, since Typst does not accept AI-written code.
 
 - `index.html`: the page.
 - `pdf/`: the same documents exported by Typst today and by the prototype.
-- `documents/`: the demo, 25 one-feature documents, a test of the thesis template's heading
+- `documents/`: the demo, 29 one-feature documents, a test of the thesis template's heading
   levels, and the generators for the 373-page document and for a document of equations.
 - `tools/`: `check.sh` compiles and validates the documents, `bench.py` times two builds,
   `structdump.py` prints where a tag sits in a PDF's structure tree, `svgpos.py` compares
