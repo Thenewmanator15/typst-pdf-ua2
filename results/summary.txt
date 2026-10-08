@@ -1,0 +1,43 @@
+Results, 9 October 2026. veraPDF 1.30.3, profile "PDF/UA-2 + Tagged PDF" (1,728 rules).
+Typst today: typst/typst e58a63a, unmodified. Prototype: Thenewmanator15/typst ua2-prototype.
+Both built with Rust 1.99.0 on Windows 11.
+
+veraPDF PDF/UA-2
+  document               pages  Typst today, as PDF 2.0         prototype, as PDF/UA-2
+  demo.typ                   2  fails 8 rules, 76 checks        conforms, 5,189 checks
+  thesis sample             20  fails 7 rules, 391 checks       conforms, 44,769 checks
+  large (150 chapters)     373  fails 8 rules, 47,120 checks    conforms, 3,396,156 checks
+
+  The thesis sample is casson-uom-thesis 0.1.2 with its chapter and section headings
+  written as blocks rather than paragraphs. Without that change 28 headings contain a
+  paragraph, which ISO 32005 does not allow.
+
+  Rules that fail for Typst today: 5, 8.2.4, 8.2.5.2, 8.2.5.8, 8.2.5.14 (documents with
+  footnotes), 8.2.5.20, 8.8 and 8.11.2. The namespace address that Typst 0.15 writes is
+  wrong (fixed in pdf-writer), which is what 8.2.4 and 8.2.5.20 report, and it hides other
+  rules. With the address corrected by hand, the thesis sample fails 11 rules instead,
+  among them the nesting rules of ISO 32005 for captions, block quotes and headings.
+
+Other checks on the prototype
+  ua-2 together with a-4, thesis sample and large document: conform to PDF/UA-2 and PDF/A-4
+  23 one-feature documents: 22 conform, list_terms fails 8.2.5.25; equation_block is refused
+    until its equation is given alternative text
+  Typst's test suite: 3,790 of 3,792 pass; line-numbers-pdf-2-0 and background-artifact-2-0
+    differ only by the namespace address and the namespace of the root Document
+  PDF 1.7 and PDF/UA-1 output of the large document: the same bytes as Typst today, apart
+    from the timestamp and the document id made from it
+  thesis sample, every glyph and shape on 20 pages (12,635 items): same position
+
+Cost on the large document (tools/bench.py, nine interleaved rounds, best time)
+  export     build         time    peak memory    PDF size
+  PDF 1.7    Typst today   2.48 s       957 MB    7,907 KB
+  PDF 1.7    prototype     2.47 s       962 MB    7,907 KB
+  PDF/UA-1   Typst today   2.50 s       956 MB    7,927 KB
+  PDF/UA-1   prototype     2.51 s       962 MB    7,927 KB
+  PDF 2.0    Typst today   2.46 s       957 MB    8,175 KB
+  PDF 2.0    prototype     2.51 s       964 MB    8,566 KB
+  PDF/UA-2   prototype     2.47 s       965 MB    8,586 KB
+
+Not done: no screen reader has been tried, ISO 14289-2 and ISO 32000-2 were not read (the
+work went by veraPDF's rules), and nobody who knows the PDF specification well has reviewed
+the code.

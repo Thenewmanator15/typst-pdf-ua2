@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF/UA-2 from Typst: a working prototype</title>
+<meta name="description" content="A prototype that exports PDF/UA-2 from Typst through krilla, checked with veraPDF. What had to change, what was tested, and what still needs a person to look at it.">
+<style>
+  :root {
+    --bg: #fbfaf7; --panel: #ffffff; --ink: #1d2327; --muted: #5b666e; --line: #dcd9d1;
+    --accent: #0b6e69; --accent-soft: #e2f1ef; --warn: #8a5300; --warn-soft: #fbf0d9;
+    --bad: #a12b2b; --bad-soft: #f8e4e2; --good: #17663a; --good-soft: #e1f2e6;
+    --code: #f1efe9; --shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181a; --panel: #1c2225; --ink: #e7eaeb; --muted: #a0abb1; --line: #333c41;
+      --accent: #5cc9c0; --accent-soft: #17393a; --warn: #f0c36a; --warn-soft: #3a2f16;
+      --bad: #f09a94; --bad-soft: #3d2222; --good: #86d6a3; --good-soft: #1c3526;
+      --code: #232a2e; --shadow: none;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font: 17px/1.6 "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
+  }
+  main, header.top, footer { max-width: 60rem; margin: 0 auto; padding: 0 1.25rem; }
+  header.top { padding-top: 3.5rem; padding-bottom: 1rem; }
+  h1 { font-size: clamp(1.9rem, 5vw, 2.8rem); line-height: 1.15; margin: 0 0 .8rem; letter-spacing: -.01em; }
+  h2 { font-size: 1.5rem; line-height: 1.25; margin: 3.2rem 0 .8rem; padding-top: .4rem; }
+  h3 { font-size: 1.08rem; margin: 1.6rem 0 .4rem; }
+  p { margin: .7rem 0; }
+  a { color: var(--accent); text-underline-offset: 2px; }
+  .lead { font-size: 1.15rem; color: var(--muted); max-width: 44rem; }
+  nav.toc { margin: 1.6rem 0 0; display: flex; flex-wrap: wrap; gap: .4rem .5rem; font-size: .92rem; }
+  nav.toc a { text-decoration: none; padding: .2rem .65rem; border: 1px solid var(--line); border-radius: 999px; background: var(--panel); }
+  nav.toc a:hover { border-color: var(--accent); }
+  .note { border-left: 4px solid var(--warn); background: var(--warn-soft); padding: .9rem 1.1rem; border-radius: 0 .5rem .5rem 0; margin: 1.6rem 0; }
+  .note strong { color: var(--warn); }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr)); gap: 1rem; margin: 1.2rem 0; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: .7rem; padding: 1.1rem 1.2rem; box-shadow: var(--shadow); }
+  .card h3 { margin: 0 0 .5rem; }
+  .card .row { display: flex; justify-content: space-between; gap: 1rem; padding: .35rem 0; border-top: 1px solid var(--line); font-size: .95rem; }
+  .card .row:first-of-type { border-top: 0; }
+  .pill { display: inline-block; padding: .05rem .6rem; border-radius: 999px; font-size: .85rem; font-weight: 600; white-space: nowrap; }
+  .pill.bad { background: var(--bad-soft); color: var(--bad); }
+  .pill.good { background: var(--good-soft); color: var(--good); }
+  .small { font-size: .9rem; color: var(--muted); }
+  .flow { display: grid; grid-template-columns: repeat(5, 1fr); gap: .6rem; margin: 1.4rem 0 .6rem; counter-reset: step; }
+  .step { position: relative; background: var(--panel); border: 1px solid var(--line); border-radius: .7rem; padding: .9rem .9rem 1rem; box-shadow: var(--shadow); }
+  .step::before { counter-increment: step; content: counter(step); display: inline-grid; place-items: center; width: 1.6rem; height: 1.6rem; border-radius: 50%; background: var(--accent); color: var(--bg); font-weight: 700; font-size: .85rem; margin-bottom: .5rem; }
+  .step:not(:last-child)::after { content: "\2192"; position: absolute; right: -.62rem; top: 1rem; color: var(--accent); font-weight: 700; z-index: 1; }
+  .step h3 { margin: 0 0 .3rem; font-size: 1rem; }
+  .step p { margin: 0; font-size: .88rem; color: var(--muted); line-height: 1.45; }
+  .step.changed { border-color: var(--accent); background: var(--accent-soft); }
+  .step.changed p { color: var(--ink); }
+  @media (max-width: 52rem) {
+    .flow { grid-template-columns: 1fr; }
+    .step:not(:last-child)::after { content: "\2193"; right: auto; left: 1.5rem; top: auto; bottom: -1.05rem; }
+  }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; font-size: .95rem; background: var(--panel); border: 1px solid var(--line); border-radius: .6rem; overflow: hidden; }
+  th, td { text-align: left; padding: .55rem .8rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-size: .82rem; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); background: var(--code); }
+  tr:last-child td { border-bottom: 0; }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  code, pre { font-family: "Cascadia Code", Consolas, "SFMono-Regular", Menlo, monospace; font-size: .86em; }
+  code { background: var(--code); padding: .08em .35em; border-radius: .3em; }
+  pre { background: var(--code); border: 1px solid var(--line); border-radius: .6rem; padding: .9rem 1rem; overflow-x: auto; line-height: 1.5; margin: .6rem 0 1rem; }
+  pre code { background: none; padding: 0; font-size: .92em; }
+  .diff { display: grid; grid-template-columns: 1fr 1fr; gap: .8rem; margin: .5rem 0 1.2rem; }
+  .diff > div { min-width: 0; }
+  .diff .label { font-size: .8rem; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; margin-bottom: .25rem; }
+  .diff .before .label { color: var(--bad); }
+  .diff .after .label { color: var(--good); }
+  .diff pre { margin: 0; white-space: pre-wrap; word-break: break-word; }
+  .diff .after pre { border-color: var(--good); }
+  mark { background: var(--good-soft); color: inherit; padding: 0 .15em; border-radius: .2em; font-weight: 600; }
+  @media (max-width: 44rem) { .diff { grid-template-columns: 1fr; } }
+  .downloads { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: 1rem; }
+  .btn { display: inline-block; text-decoration: none; border: 1px solid var(--accent); color: var(--accent); border-radius: .45rem; padding: .35rem .8rem; margin: .3rem .4rem 0 0; font-weight: 600; font-size: .92rem; }
+  .btn.primary { background: var(--accent); color: var(--bg); }
+  ol.plain, ul.plain { padding-left: 1.3rem; }
+  ol.plain li, ul.plain li { margin: .35rem 0; }
+  footer { margin-top: 4rem; padding-top: 1.4rem; padding-bottom: 3rem; border-top: 1px solid var(--line); color: var(--muted); font-size: .92rem; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <h1>PDF/UA-2 from Typst: a working prototype</h1>
+  <p class="lead">Typst can already make accessible PDFs to the PDF/UA-1 standard. This is an experiment to see what it would take to reach PDF/UA-2, the version for PDF 2.0, and whether a real document gets through a validator at the end.</p>
+  <nav class="toc" aria-label="On this page">
+    <a href="#result">Result</a>
+    <a href="#flow">How it works</a>
+    <a href="#files">Try the files</a>
+    <a href="#inside">What changes inside</a>
+    <a href="#changes">What had to change</a>
+    <a href="#checked">What was checked</a>
+    <a href="#limits">What it doesn't show</a>
+    <a href="#build">Build it</a>
+  </nav>
+</header>
+
+<main>
+
+<div class="note">
+  <strong>Read this first.</strong> This is a prototype, and the code was written with Claude, an AI assistant. Nobody who knows the PDF specification well has reviewed it, and nobody has tried the output in a screen reader yet. It is here to be looked at, not merged. Typst does not accept AI-written code, so none of this is offered to Typst as a pull request.
+</div>
+
+<h2 id="result">Result</h2>
+<p>Three documents, each exported as PDF 2.0 by Typst as it is today and as PDF/UA-2 by the prototype, then checked with <a href="https://verapdf.org">veraPDF</a> 1.30.3 against its PDF/UA-2 profile (1,728 rules).</p>
+
+<div class="cards">
+  <div class="card">
+    <h3>A two-page demo</h3>
+    <div class="row"><span>Typst today</span><span class="pill bad">8 rules fail</span></div>
+    <div class="row"><span>Prototype</span><span class="pill good">Conforms</span></div>
+    <p class="small">One of each thing: contents, headings, a footnote, a figure, a table, an equation, a quote.</p>
+  </div>
+  <div class="card">
+    <h3>A 20-page thesis sample</h3>
+    <div class="row"><span>Typst today</span><span class="pill bad">7 rules fail</span></div>
+    <div class="row"><span>Prototype</span><span class="pill good">Conforms</span></div>
+    <p class="small">The sample from the University of Manchester thesis template, with citations and lists of figures and tables.</p>
+  </div>
+  <div class="card">
+    <h3>A 373-page document</h3>
+    <div class="row"><span>Typst today</span><span class="pill bad">8 rules fail</span></div>
+    <div class="row"><span>Prototype</span><span class="pill good">Conforms</span></div>
+    <p class="small">Generated: 1,800 footnotes, cross-references, citations, 300 figures and tables. 3.4 million checks.</p>
+  </div>
+</div>
+<p>The pages look the same in both. On the thesis sample, all 12,635 glyphs and shapes sit in exactly the same place. The difference is in the tags that assistive technology reads.</p>
+
+<h2 id="flow">How a document gets there</h2>
+<p>Typst lays the document out and decides what the tags are. <a href="https://github.com/LaurenzV/krilla">krilla</a>, the library it uses to write PDFs, turns that into the file. Both needed changes, shown in green.</p>
+
+<div class="flow">
+  <div class="step"><h3>Your document</h3><p>Ordinary Typst source. Nothing changes here, apart from asking for <code>ua-2</code>.</p></div>
+  <div class="step changed"><h3>Typst</h3><p>Gives an id to anything that is pointed at, and says what each link, bookmark, contents entry and footnote refers to.</p></div>
+  <div class="step changed"><h3>krilla</h3><p>Writes those as structure destinations and <code>Ref</code> entries, uses the PDF 2.0 tag names, and marks the file as PDF/UA-2.</p></div>
+  <div class="step"><h3>PDF 2.0 file</h3><p>Looks identical on the page. A few per cent larger than plain PDF 2.0.</p></div>
+  <div class="step"><h3>veraPDF</h3><p>An independent validator checks 1,728 rules. It knows nothing about how the file was made.</p></div>
+</div>
+<p class="small">krilla refuses to write a file that claims PDF/UA-2 but could not conform, for example a link that leads to a bare position on a page. So a document either exports and passes, or you get an error saying why.</p>
+
+<h2 id="files">Try the files</h2>
+<p>Open a pair side by side. If you use a screen reader, the contents list, the footnote and the figure reference are the places to compare. I would like to hear what you find.</p>
+<div class="downloads">
+  <div class="card">
+    <h3>Two-page demo</h3>
+    <p class="small">Source: <a href="documents/demo.typ">demo.typ</a></p>
+    <a class="btn" href="pdf/demo-typst-today-pdf20.pdf">Typst today (PDF 2.0)</a>
+    <a class="btn primary" href="pdf/demo-prototype-ua2.pdf">Prototype (PDF/UA-2)</a>
+  </div>
+  <div class="card">
+    <h3>Thesis sample, 20 pages</h3>
+    <p class="small">From <a href="https://github.com/ALEX-CASSON-LAB/casson-uom-thesis">casson-uom-thesis</a> by Alex Casson</p>
+    <a class="btn" href="pdf/thesis-sample-typst-today-ua1.pdf">Typst today (PDF/UA-1)</a>
+    <a class="btn primary" href="pdf/thesis-sample-prototype-ua2.pdf">Prototype (PDF/UA-2)</a>
+  </div>
+</div>
+
+<h2 id="inside">What changes inside the file</h2>
+<p>These are taken from the two demo PDFs. Each is one tag from the file's structure tree, with the new parts marked.</p>
+
+<h3>A heading gets an id, so other things can point at it</h3>
+<div class="diff">
+  <div class="before"><div class="label">Typst today</div><pre><code>/S /H1
+/T (Method)</code></pre></div>
+  <div class="after"><div class="label">Prototype</div><pre><code>/S /H1
+<mark>/ID (UL2488…)</mark>
+/T (Method)</code></pre></div>
+</div>
+
+<h3>A contents entry names the heading it lists</h3>
+<div class="diff">
+  <div class="before"><div class="label">Typst today</div><pre><code>/S /TOCI
+/K [13 0 R]</code></pre></div>
+  <div class="after"><div class="label">Prototype</div><pre><code>/S /TOCI
+<mark>/Ref [22 0 R]</mark>
+/K [14 0 R]</code></pre></div>
+</div>
+
+<h3>A link leads to the heading, not to a spot on a page</h3>
+<div class="diff">
+  <div class="before"><div class="label">Typst today</div><pre><code>[99 0 R /XYZ 70.87 609.51 0]
+ object 99 is a page</code></pre></div>
+  <div class="after"><div class="label">Prototype</div><pre><code>[<mark>34 0 R</mark> /XYZ 70.87 609.51 0]
+ object 34 is <mark>the H1 heading</mark></code></pre></div>
+</div>
+
+<h3>A footnote uses the PDF 2.0 tag and points back at its number</h3>
+<div class="diff">
+  <div class="before"><div class="label">Typst today</div><pre><code>/S /Note
+/ID (Note 1)</code></pre></div>
+  <div class="after"><div class="label">Prototype</div><pre><code>/S <mark>/FENote</mark>
+/ID (ULfcba…)
+<mark>/Ref [24 0 R]</mark></code></pre></div>
+</div>
+
+<h3>Loose text in a block quote goes in a paragraph</h3>
+<div class="diff">
+  <div class="before"><div class="label">Typst today</div><pre><code>BlockQuote
+  Span, Em, Span</code></pre></div>
+  <div class="after"><div class="label">Prototype</div><pre><code>BlockQuote
+  <mark>P</mark>
+    (the text)</code></pre></div>
+</div>
+
+<h3>The file says what it is, in the right namespace</h3>
+<div class="diff">
+  <div class="before"><div class="label">Typst today</div><pre><code>/NS (https://www.iso.org/pdf2/ssn)
+no PDF/UA identification
+Document: no namespace</code></pre></div>
+  <div class="after"><div class="label">Prototype</div><pre><code>/NS (<mark>http://iso.org/pdf2/ssn</mark>)
+<mark>pdfuaid:part 2, rev 2024</mark>
+Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
+</div>
+<p class="small">The namespace address is a bug that is already fixed upstream in pdf-writer, and the root <code>Document</code> namespace was merged into krilla as part of this work. They will reach Typst when it next updates krilla.</p>
+
+<h2 id="changes">What had to change</h2>
+
+<h3>In krilla</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>Change</th><th>PDF/UA-2 clause</th><th>State</th></tr></thead>
+  <tbody>
+    <tr><td>Root <code>Document</code> and <code>Title</code> in the PDF 2.0 namespace</td><td>8.2.5.2</td><td><a href="https://github.com/LaurenzV/krilla/pull/450">Merged</a></td></tr>
+    <tr><td>A PDF/UA-2 validator: PDF 2.0 only, identification, <code>DisplayDocTitle</code></td><td>5, 8.11.2</td><td>On a branch</td></tr>
+    <tr><td><code>FENote</code> in place of <code>Note</code></td><td>8.2.5.14</td><td>On a branch</td></tr>
+    <tr><td><code>Contents</code> on form widgets</td><td>8.10.2.3</td><td>On a branch</td></tr>
+    <tr><td>A <code>refs</code> attribute on tags, written as <code>Ref</code></td><td>8.2.5.8, 8.2.5.14</td><td>On a branch</td></tr>
+    <tr><td>Structure destinations: a destination can lead to a tag</td><td>8.8</td><td>On a branch</td></tr>
+    <tr><td>The validator refuses what could not conform</td><td>8.8, 8.2.5.8, 8.2.5.14</td><td>On a branch</td></tr>
+  </tbody>
+</table>
+</div>
+<p>The branch and the discussion are at <a href="https://github.com/LaurenzV/krilla/issues/449">krilla issue 449</a>. The maintainer's view is that PDF/UA-2 needs someone with good knowledge of the PDF specification in the loop, and that review time is the bottleneck. I agree, which is why this page exists.</p>
+
+<h3>In Typst</h3>
+<ol class="plain">
+  <li>A <code>ua-2</code> value for <code>--pdf-standard</code>.</li>
+  <li>An id on each tag that something points at, with links, bookmarks and named destinations leading to it.</li>
+  <li><code>Ref</code> from each contents entry to its heading, and between a footnote and the link with its number.</li>
+  <li>A figure that wraps a single table or image has no tag of its own, so a reference to it goes to the element inside.</li>
+  <li>Tags inside an element with an alternative description are left out, so a reference to a sub-figure goes to the described figure.</li>
+  <li>Citations link to the number of a bibliography entry, which has a location but no tag. Those go to the nearest enclosing element that has one, as does any other link to content without a tag.</li>
+  <li>Loose inline content in a block quote, or directly in the document, goes in a paragraph. Typst uses a span with block placement there, which ISO 32005 does not allow.</li>
+  <li>A caption cannot sit in a <code>Div</code> under the document, because the <code>Div</code> does not count as its parent. The prototype wraps a figure and its caption in a <code>Sect</code>.</li>
+</ol>
+<p>Items 4 to 7 only showed up when real documents were run through it.</p>
+
+<h2 id="checked">What was checked</h2>
+<div class="scroll">
+<table>
+  <thead><tr><th>Check</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>veraPDF PDF/UA-2 on the demo, the thesis sample and the 373-page document</td><td>All conform</td></tr>
+    <tr><td>veraPDF PDF/A-4 on the thesis sample and the 373-page document, exported as <code>ua-2,a-4</code></td><td>Both conform to both</td></tr>
+    <tr><td>23 one-feature documents (a list, a table, a quote, a footnote and so on)</td><td>22 conform. Term lists fail clause 8.2.5.25</td></tr>
+    <tr><td>Typst's own test suite</td><td>3,790 of 3,792 pass. The other two are PDF 2.0 outputs whose only changes are the two namespace fixes</td></tr>
+    <tr><td>krilla's test suite, at each commit</td><td>All pass</td></tr>
+    <tr><td>PDF 1.7 and PDF/UA-1 output from the prototype</td><td>Unchanged from Typst today, apart from the timestamp and the document id made from it</td></tr>
+    <tr><td>Every glyph and shape on the 20 thesis pages</td><td>Same position in both</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Cost, on the 373-page document</h3>
+<div class="scroll">
+<table>
+  <thead><tr><th>Export</th><th>Build</th><th class="num">Time</th><th class="num">Peak memory</th><th class="num">PDF size</th></tr></thead>
+  <tbody>
+    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">2.48 s</td><td class="num">957 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">2.47 s</td><td class="num">962 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 2.0</td><td>Typst today</td><td class="num">2.46 s</td><td class="num">957 MB</td><td class="num">8,175 KB</td></tr>
+    <tr><td>PDF 2.0</td><td>Prototype</td><td class="num">2.51 s</td><td class="num">964 MB</td><td class="num">8,566 KB</td></tr>
+    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">2.47 s</td><td class="num">965 MB</td><td class="num">8,586 KB</td></tr>
+  </tbody>
+</table>
+</div>
+<p class="small">Best of nine runs for each, with the builds interleaved. Both builds are from the same Typst commit with the same compiler. The machine was in use, so differences of a few hundredths of a second mean nothing.</p>
+
+<h2 id="limits">What it doesn't show</h2>
+<p>Passing a validator is necessary, but it is not the same as being right. These need a person.</p>
+<ul class="plain">
+  <li><strong>Nobody has tried it in a screen reader.</strong> That is the real test of an accessibility change, and it has not been done.</li>
+  <li><strong>The standard itself was not read.</strong> The work went by veraPDF's rules and their descriptions, not by ISO 14289-2 or ISO 32000-2.</li>
+  <li><strong>Some choices are allowed but may not be right.</strong> <code>Sect</code> as the wrapper for a figure and its caption passes, but I do not know that it is the right meaning. The same goes for sending a citation to the nearest enclosing element.</li>
+  <li><strong>veraPDF has no rule for some things.</strong> It does not check that a footnote's number points at the note, only that the references which exist match up. It cannot tell whether alternative text is any good or the reading order makes sense.</li>
+  <li><strong>The code has shortcuts.</strong> Links split over two lines and footnotes that run on to the next page are handled but not covered by a test document. Term lists still fail. Maths is described with alternative text, not MathML.</li>
+  <li><strong>It is three documents.</strong> Running a 373-page document found a bug that the 20-page one did not. More documents would find more.</li>
+</ul>
+
+<h2 id="build">Build it</h2>
+<p>You need Rust, and veraPDF if you want to check the output.</p>
+<pre><code>git clone --branch ua2-prototype https://github.com/Thenewmanator15/typst
+cd typst
+cargo build --release -p typst-cli
+
+target/release/typst compile --pdf-standard ua-2 document.typ
+verapdf --flavour ua2 document.pdf</code></pre>
+<p>A document needs a title, a language and alternative text on figures and equations, as it does for PDF/UA-1. If something cannot be made to conform, the export stops with an error that says what and where.</p>
+
+<h3>Where everything is</h3>
+<ul class="plain">
+  <li><a href="https://github.com/Thenewmanator15/typst/tree/ua2-prototype">The Typst prototype</a>, with <a href="https://github.com/Thenewmanator15/typst/blob/ua2-prototype/PROTOTYPE.md">notes on its shortcuts</a></li>
+  <li><a href="https://github.com/Thenewmanator15/krilla/tree/ua2-structure-destinations">The krilla branch</a>, six commits on krilla main</li>
+  <li><a href="https://github.com/LaurenzV/krilla/issues/449">krilla issue 449</a>, where this is being discussed, and <a href="https://github.com/typst/typst/issues/7006">Typst's PDF/UA-2 tracking issue</a></li>
+  <li><a href="https://github.com/Thenewmanator15/typst-pdf-ua2">This page's repository</a>, with the test documents, the scripts and the results</li>
+</ul>
+
+</main>
+
+<footer>
+  <p>October 2026. The code was written with Claude, an AI assistant, which also ran the checks described above. The thesis sample is from <a href="https://github.com/ALEX-CASSON-LAB/casson-uom-thesis">casson-uom-thesis</a>, which is under the MIT No Attribution licence. If you find something wrong, please open an issue on <a href="https://github.com/Thenewmanator15/typst-pdf-ua2/issues">this repository</a>.</p>
+</footer>
+
+</body>
+</html>
