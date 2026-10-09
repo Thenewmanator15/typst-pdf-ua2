@@ -5,7 +5,7 @@ Both built with Rust 1.99.0 on Windows 11.
 veraPDF PDF/UA-2
   document               pages  Typst today, as PDF 2.0         prototype, as PDF/UA-2
   demo.typ                   2  fails 8 rules, 76 checks        passes, 5,230 checks
-  thesis sample             20  fails 7 rules, 391 checks       passes, 44,735 checks
+  thesis sample             20  fails 7 rules, 391 checks       passes, 44,729 checks
   large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,389,443 checks
 
   The thesis sample is casson-uom-thesis 0.1.2 with its chapter and section headings
@@ -22,7 +22,7 @@ Other checks on the prototype
   ua-2 together with a-4f, thesis sample and large document: pass PDF/UA-2 and PDF/A-4f.
     ua-2 with plain a-4 is refused for a document with equations, because PDF/A-4 only
     allows attached files that are PDF/A and the MathML is an attached file
-  32 one-feature documents: all pass. figure_nested has figures with captions in a list
+  36 one-feature documents: all pass. figure_nested has figures with captions in a list
     item, a table cell and a block quote
   a `set pdf(standard: "ua-2")` rule in the document, with no command line option: passes,
     and the equations have MathML
@@ -84,8 +84,13 @@ The wrapper of a figure and its caption in a table cell, a block quote or anothe
 is a Sect. Div, Part and NonStruct were tried there and fail (Table 5, TD-Caption and
 Aside-Caption, and 8.2.5.27), because they do not count as the caption's parent.
 
-Not done from that reading: the number of an equation that has alt text is not labelled,
-and a heading inside another element, such as a block, does not open a section.
+Checked after that: the number of an equation with alt text keeps its label; headings in a
+block, columns, a grid and padding all open sections; line numbers end up at their lines
+under move, rotate, scale and padding; and loose text with a link in it stays one
+paragraph (it was split at the link before, which veraPDF did not object to).
+
+Not done from that reading: a heading inside a table cell, a list item, a quote or a figure
+does not open a section.
 
 Not done at all: no screen reader has been tried, on the tags or on the MathML, and
 nobody who knows the PDF specification well has reviewed the code.
