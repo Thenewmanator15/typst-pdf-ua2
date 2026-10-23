@@ -144,8 +144,8 @@
 <div class="flow">
   <div class="step"><h3>Your document</h3><p>Ordinary Typst source. Nothing changes here, apart from asking for <code>ua-2</code>.</p></div>
   <div class="step changed"><h3>Typst</h3><p>Gives an id to anything that is pointed at, says what each link, bookmark, contents entry and footnote refers to, and makes MathML for each equation.</p></div>
-  <div class="step changed"><h3>krilla</h3><p>Writes those as structure destinations and <code>Ref</code> entries, attaches the MathML to its formula, uses the PDF 2.0 tag names, and marks the file as PDF/UA-2.</p></div>
-  <div class="step"><h3>PDF 2.0 file</h3><p>Looks identical on the page. A few per cent larger than plain PDF 2.0, more if it is mostly maths.</p></div>
+  <div class="step changed"><h3>krilla</h3><p>Writes those as structure destinations, keeping the page for viewers that only know pages, and <code>Ref</code> entries, attaches the MathML to its formula, uses the PDF 2.0 tag names, and marks the file as PDF/UA-2.</p></div>
+  <div class="step"><h3>PDF 2.0 file</h3><p>Looks identical on the page. About 14% larger than plain PDF 2.0 on the 373-page document, mostly because each link carries both a page and a tag. More if it is mostly maths.</p></div>
   <div class="step"><h3>veraPDF</h3><p>An independent validator checks 1,728 rules. It knows nothing about how the file was made.</p></div>
 </div>
 <p class="small">Where krilla knows it cannot write something PDF/UA-2 needs, for example a link that leads to a bare position on a page, it stops with an error instead of writing a file that claims PDF/UA-2 and fails. It does not catch everything it cannot check, such as whether a formula that needs MathML has it. The prototype checks that itself.</p>
@@ -175,7 +175,7 @@
   <div class="before"><div class="label">Typst today</div><pre><code>/S /H1
 /T (Method)</code></pre></div>
   <div class="after"><div class="label">Prototype</div><pre><code>/S /H1
-<mark>/ID (UL2488…)</mark>
+<mark>/ID (ULb55c5f…)</mark>
 /T (Method)</code></pre></div>
 </div>
 
@@ -184,25 +184,29 @@
   <div class="before"><div class="label">Typst today</div><pre><code>/S /TOCI
 /K [13 0 R]</code></pre></div>
   <div class="after"><div class="label">Prototype</div><pre><code>/S /TOCI
-<mark>/Ref [22 0 R]</mark>
-/K [14 0 R]</code></pre></div>
+<mark>/Ref [21 0 R]</mark>
+/K [13 0 R]</code></pre></div>
 </div>
 
-<h3>A link leads to the heading, not to a spot on a page</h3>
+<h3>A link leads to the heading as well as to the page</h3>
 <div class="diff">
   <div class="before"><div class="label">Typst today</div><pre><code>[99 0 R /XYZ 70.87 609.51 0]
  object 99 is a page</code></pre></div>
-  <div class="after"><div class="label">Prototype</div><pre><code>[<mark>34 0 R</mark> /XYZ 70.87 609.51 0]
+  <div class="after"><div class="label">Prototype</div><pre><code><mark>/S /GoTo</mark>
+/D (method)
+<mark>/SD [34 0 R /XYZ 70.87 609.51 0]</mark>
+ D leads to the page, as before
  object 34 is <mark>the H1 heading</mark></code></pre></div>
 </div>
+<p class="small">An earlier version put the heading in place of the page. veraPDF accepted that, but a viewer that expects a page there may not follow the link. The page now stays in <code>D</code>, and the heading goes in <code>SD</code>, the structure destination of a go-to action in ISO 32000-2.</p>
 
 <h3>A footnote uses the PDF 2.0 tag and points back at its number</h3>
 <div class="diff">
   <div class="before"><div class="label">Typst today</div><pre><code>/S /Note
 /ID (Note 1)</code></pre></div>
   <div class="after"><div class="label">Prototype</div><pre><code>/S <mark>/FENote</mark>
-/ID (ULfcba…)
-<mark>/Ref [24 0 R]</mark></code></pre></div>
+/ID (ULef2a5f…)
+<mark>/Ref [23 0 R]</mark></code></pre></div>
 </div>
 
 <h3>Loose text in a block quote goes in a paragraph</h3>
@@ -254,7 +258,7 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
     <tr><td><code>FENote</code> in place of <code>Note</code></td><td>8.2.5.14</td><td>On a branch</td></tr>
     <tr><td><code>Contents</code> on form widgets</td><td>8.10.2.3</td><td>On a branch</td></tr>
     <tr><td>A <code>refs</code> attribute on tags, written as <code>Ref</code></td><td>8.2.5.8, 8.2.5.14</td><td>On a branch</td></tr>
-    <tr><td>Structure destinations: a destination can lead to a tag</td><td>8.8</td><td>On a branch</td></tr>
+    <tr><td>Structure destinations: a link, bookmark or named destination can lead to a tag, and keeps the page for viewers that only know pages</td><td>8.8</td><td>On a branch</td></tr>
     <tr><td>The validator refuses what could not conform</td><td>8.8, 8.2.5.8, 8.2.5.14</td><td>On a branch</td></tr>
     <tr><td>MathML on a <code>Formula</code> tag, written as an associated file</td><td>8.2.5.29</td><td>On a branch</td></tr>
     <tr><td>The PDF 2.0 <code>Aside</code> tag, and the list types <code>Unordered</code>, <code>Ordered</code> and <code>Description</code></td><td>8.2.5.27, 8.2.5.25</td><td>On a branch</td></tr>
@@ -272,13 +276,13 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <li><code>Ref</code> from each contents entry to its heading, and between a footnote and the link with its number.</li>
   <li>A figure that wraps a single table or image has no tag of its own, so a reference to it goes to the element inside.</li>
   <li>Tags inside an element with an alternative description are left out, so a reference to a sub-figure goes to the described figure.</li>
-  <li>Citations link to the number of a bibliography entry, which has a location but no tag. Those go to the nearest enclosing element that has one, as does any other link to content without a tag.</li>
+  <li>Citations link to the number of a bibliography entry, which has a location but no tag. Those go to the nearest enclosing element that has one, as does any other link to content without a tag, including content in a page header or footer, which is an artifact.</li>
   <li>Loose inline content in a block quote, or directly in the document, goes in a paragraph. Typst uses a span with block placement there, which ISO 32005 does not allow.</li>
   <li>A caption has to be a child of the element that encloses what it captions, and a <code>Div</code> does not count as that. The prototype wraps a figure and its caption in an <code>Aside</code>.</li>
-  <li>MathML for each equation, from the converter that HTML export already has, handed to krilla with the <code>Formula</code> tag. It is only made when <code>ua-2</code> is asked for, because it costs about as much as laying the equation out.</li>
+  <li>MathML for each equation, from the converter that HTML export already has, handed to krilla with the <code>Formula</code> tag. It is only made when <code>ua-2</code> is asked for, because it costs about as much as laying the equation out. If an equation can't be converted, a warning says why.</li>
   <li>A link to a place in the same document is tagged <code>Reference</code>, and only a link that leaves the document is a <code>Link</code>.</li>
   <li>A list of terms is marked as a description list, since its terms are labels.</li>
-  <li>The filler between a contents entry and its page number is an artifact whatever it is made of, not only when it is the default row of dots.</li>
+  <li>In PDF 2.0, the filler between a contents entry and its page number is an artifact whatever it is made of, not only when it is the default row of dots. PDF 1.7 and PDF/UA-1 keep it as Typst does today.</li>
   <li>The number beside a numbered equation is marked as its label, not as part of the maths.</li>
   <li>A footnote says that it is a footnote, and a list says which bullet or numbering it uses.</li>
   <li>The bibliography is a section with the role <code>doc-bibliography</code>.</li>
@@ -300,9 +304,9 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
     <tr><td>Content drawn outside any tag or artifact, in the demo and the thesis sample</td><td>None</td></tr>
     <tr><td>A document of 4,000 different equations</td><td>Passes, with 4,000 MathML files attached</td></tr>
     <tr><td>The MathML in the PDF against the MathML of Typst's HTML export</td><td>The same</td></tr>
-    <tr><td>Typst's own test suite</td><td>3,790 of 3,792 pass. The other two are PDF 2.0 outputs whose only changes are the two namespace fixes</td></tr>
+    <tr><td>Typst's own test suite</td><td>All 3,792 pass. Two of them are PDF 2.0 outputs that differ from Typst today's, so their stored references are updated on the branch</td></tr>
     <tr><td>krilla's test suite, at each commit</td><td>All pass</td></tr>
-    <tr><td>PDF 1.7 and PDF/UA-1 output from the prototype</td><td>Unchanged from Typst today, apart from the timestamp and the document id made from it</td></tr>
+    <tr><td>PDF 1.7 and PDF/UA-1 output from the prototype, on the 373-page document</td><td>The same bytes as Typst today, given the same creation time</td></tr>
     <tr><td>Every glyph and shape on the 20 thesis pages</td><td>Same position in both</td></tr>
   </tbody>
 </table>
@@ -313,11 +317,11 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
 <table>
   <thead><tr><th>Export</th><th>Build</th><th class="num">Time</th><th class="num">Peak memory</th><th class="num">PDF size</th></tr></thead>
   <tbody>
-    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">2.52 s</td><td class="num">956 MB</td><td class="num">7,907 KB</td></tr>
-    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">2.51 s</td><td class="num">962 MB</td><td class="num">7,907 KB</td></tr>
-    <tr><td>PDF 2.0</td><td>Typst today</td><td class="num">2.51 s</td><td class="num">956 MB</td><td class="num">8,175 KB</td></tr>
-    <tr><td>PDF 2.0</td><td>Prototype</td><td class="num">2.53 s</td><td class="num">968 MB</td><td class="num">8,656 KB</td></tr>
-    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">2.57 s</td><td class="num">972 MB</td><td class="num">8,678 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">2.66 s</td><td class="num">956 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">2.70 s</td><td class="num">962 MB</td><td class="num">7,907 KB</td></tr>
+    <tr><td>PDF 2.0</td><td>Typst today</td><td class="num">2.67 s</td><td class="num">955 MB</td><td class="num">8,175 KB</td></tr>
+    <tr><td>PDF 2.0</td><td>Prototype</td><td class="num">2.72 s</td><td class="num">969 MB</td><td class="num">9,305 KB</td></tr>
+    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">2.75 s</td><td class="num">967 MB</td><td class="num">9,328 KB</td></tr>
   </tbody>
 </table>
 </div>
@@ -327,15 +331,15 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
 <table>
   <thead><tr><th>Export</th><th>Build</th><th class="num">Time</th><th class="num">Peak memory</th><th class="num">PDF size</th></tr></thead>
   <tbody>
-    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">0.54 s</td><td class="num">202 MB</td><td class="num">2,976 KB</td></tr>
-    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">0.55 s</td><td class="num">203 MB</td><td class="num">2,976 KB</td></tr>
-    <tr><td>PDF/UA-1</td><td>Typst today</td><td class="num">0.61 s</td><td class="num">213 MB</td><td class="num">3,193 KB</td></tr>
-    <tr><td>PDF/UA-1</td><td>Prototype</td><td class="num">0.61 s</td><td class="num">214 MB</td><td class="num">3,193 KB</td></tr>
-    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">0.84 s</td><td class="num">229 MB</td><td class="num">5,443 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Typst today</td><td class="num">0.54 s</td><td class="num">201 MB</td><td class="num">2,976 KB</td></tr>
+    <tr><td>PDF 1.7</td><td>Prototype</td><td class="num">0.57 s</td><td class="num">202 MB</td><td class="num">2,976 KB</td></tr>
+    <tr><td>PDF/UA-1</td><td>Typst today</td><td class="num">0.64 s</td><td class="num">212 MB</td><td class="num">3,193 KB</td></tr>
+    <tr><td>PDF/UA-1</td><td>Prototype</td><td class="num">0.63 s</td><td class="num">213 MB</td><td class="num">3,193 KB</td></tr>
+    <tr><td>PDF/UA-2</td><td>Prototype</td><td class="num">0.82 s</td><td class="num">229 MB</td><td class="num">5,445 KB</td></tr>
   </tbody>
 </table>
 </div>
-<p class="small">Best of five runs for each, with the builds interleaved. Both builds are from the same Typst commit with the same compiler. The machine was in use, so differences of a few hundredths of a second mean nothing. The second document is the worst case for MathML: nothing but equations, none alike. There PDF/UA-2 takes about a third longer than PDF/UA-1 and the file is 70% larger, about 560 bytes an equation. Exports that do not ask for <code>ua-2</code> pay nothing, because the MathML is not made for them.</p>
+<p class="small">Best of five runs for each, with the builds interleaved, measured again on 23 October after the fixes described below. Both builds are from the same Typst commit with the same compiler. The machine was in use, so differences of a few hundredths of a second mean nothing. On the first document, the PDF 2.0 files are larger than before because each link now carries both a page and a tag. The second document is the worst case for MathML: nothing but equations, none alike. There PDF/UA-2 takes about 30% longer than PDF/UA-1 and the file is 70% larger, about 580 bytes an equation. Exports that do not ask for <code>ua-2</code> pay nothing, because the MathML is not made for them.</p>
 
 <h2 id="limits">What it doesn't show</h2>
 <p>Passing a validator is necessary, but it is not the same as being right. These need a person.</p>
@@ -344,6 +348,7 @@ Document: <mark>PDF 2.0 namespace</mark></code></pre></div>
   <li><strong>The MathML has not been heard.</strong> Equations now carry MathML, and it matches what Typst's HTML export makes, but that export is itself marked experimental, and nobody has listened to it in a screen reader that reads MathML from a PDF. Support for that in readers is still thin. veraPDF has no rule for any of it.</li>
   <li><strong>The standard was read after the code, not before.</strong> The work went by veraPDF's rules first. I have since been through every clause of section 8 of ISO 14289-2, and the parts of ISO 32000-2 it points to. That changed how named destinations are written, dropped a requirement for an outline that PDF/UA-2 does not make, and added MathML and items 9 to 16 above. Most of the rest does not apply, because Typst cannot produce forms, media, redactions or ruby text.</li>
   <li><strong>One thing from that reading is not done.</strong> A heading inside a table cell, a list item, a quote or a figure does not open a section. Headings in a block, in columns, in a grid or in padding do.</li>
+  <li><strong>A review of the code found problems that veraPDF did not.</strong> On 22 October the Typst and krilla branches were reviewed, again with Claude, and the fixes are on them now. Links and bookmarks had the heading in place of the page, which veraPDF accepts but a viewer that expects a page may not follow. A link to something in a page header or footer led to a tag that is never written. <code>typst watch</code> did not make MathML, and an equation that could not be converted said nothing about why. A custom contents filler became an artifact in every PDF, not only in PDF 2.0. All the checks on this page were run again afterwards and still pass. This was not a review by someone who knows the specification.</li>
   <li><strong>The prototype had a flaw of its own that only turned up late.</strong> Loose text, such as a sentence inside padding, was split into two paragraphs wherever it had a link in it. That is fixed, but it passed veraPDF all along, and there may be more like it.</li>
   <li><strong>Some of it only a reader of the standard can check.</strong> veraPDF passed the files before items 9 to 18 and passes them after, so it says nothing about whether those are right. They rest on my reading of the clauses.</li>
   <li><strong>Some choices are allowed but may not be right.</strong> PDF/UA-2 says a caption has to be a child of the element that encloses what it captions (8.2.5.27). The prototype wraps a figure and its caption in an <code>Aside</code>. ISO 32005 does not allow an <code>Aside</code> in a table cell, a block quote or another <code>Aside</code>, so there it uses a <code>Sect</code>. I tried the alternatives there: <code>Div</code>, <code>Part</code> and <code>NonStruct</code> all fail, because they do not count as the caption's parent, and ISO 32000-2 does define <code>Sect</code> as a grouping of elements with regard to their hierarchy, so it is the right element of those that are allowed. The other way would be to put the caption inside the <code>Figure</code>, but a reader that speaks a figure's description skips what is inside it. Sending a citation to the nearest enclosing element is also my guess, not something the standard spells out.</li>

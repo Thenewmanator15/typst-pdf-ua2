@@ -1,12 +1,14 @@
-Results, 8 October 2026. veraPDF 1.30.3, profile "PDF/UA-2 + Tagged PDF" (1,728 rules).
-Typst today: typst/typst e58a63a, unmodified. Prototype: Thenewmanator15/typst ua2-prototype.
-Both built with Rust 1.99.0 on Windows 11.
+Results, 23 October 2026: every check on the prototype run again after the review fixes of
+22 October (first run 8 October). veraPDF 1.30.3, profile "PDF/UA-2 + Tagged PDF" (1,728
+rules). Typst today: typst/typst e58a63a, unmodified; its veraPDF results are from 8 October,
+since it has not changed. Prototype: Thenewmanator15/typst ua2-prototype at f16a288, with
+Thenewmanator15/krilla ua2-on-typst-pin at d530ce5. Both built with Rust 1.99.0 on Windows 11.
 
 veraPDF PDF/UA-2
   document               pages  Typst today, as PDF 2.0         prototype, as PDF/UA-2
   demo.typ                   2  fails 8 rules, 76 checks        passes, 5,230 checks
-  thesis sample             20  fails 7 rules, 391 checks       passes, 44,729 checks
-  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,389,443 checks
+  thesis sample             20  fails 7 rules, 391 checks       passes, 44,760 checks
+  large (150 chapters)     373  fails 8 rules, 47,120 checks    passes, 3,391,243 checks
 
   The thesis sample is casson-uom-thesis 0.1.2 with its chapter and section headings
   written as blocks rather than paragraphs. Without that change 28 headings contain a
@@ -26,35 +28,41 @@ Other checks on the prototype
     item, a table cell and a block quote
   a `set pdf(standard: "ua-2")` rule in the document, with no command line option: passes,
     and the equations have MathML
-  an outline with a filler that is not the default: the filler is an artifact
+  an outline with a filler that is not the default: the filler is an artifact (in PDF 2.0;
+    PDF 1.7 and PDF/UA-1 keep it as Typst does today)
+  every link in the demo is a go-to action with the page in D and the tag it leads to in SD
   mathematics (documents/large/make_math.py, 4,000 different equations): passes, with 4,000
     MathML files attached (tools/mml.py prints them)
   the MathML attached to an equation is the same as the MathML of Typst's HTML export
-  Typst's test suite: 3,790 of 3,792 pass; line-numbers-pdf-2-0 and background-artifact-2-0
-    differ only by the namespace address and the namespace of the root Document
-  PDF 1.7 and PDF/UA-1 output of the large document: the same bytes as Typst today, apart
-    from the timestamp and the document id made from it
+  Typst's test suite: 3,792 of 3,792 pass; the stored references of line-numbers-pdf-2-0
+    and background-artifact-2-0, PDF 2.0 outputs that differ from Typst today's, are updated
+    on the branch
+  PDF 1.7 and PDF/UA-1 output of the large document: the same bytes as Typst today, given
+    the same creation time (--creation-timestamp)
   thesis sample, every glyph and shape on 20 pages (12,635 items): same position
 
 Cost on the large document (tools/bench.py, five interleaved rounds, best time)
   export     build         time    peak memory    PDF size
-  PDF 1.7    Typst today   2.52 s       956 MB    7,907 KB
-  PDF 1.7    prototype     2.51 s       962 MB    7,907 KB
-  PDF/UA-1   Typst today   2.53 s       957 MB    7,927 KB
-  PDF/UA-1   prototype     2.55 s       969 MB    7,927 KB
-  PDF 2.0    Typst today   2.51 s       956 MB    8,175 KB
-  PDF 2.0    prototype     2.53 s       968 MB    8,656 KB
-  PDF/UA-2   prototype     2.57 s       972 MB    8,678 KB
+  PDF 1.7    Typst today   2.66 s       956 MB    7,907 KB
+  PDF 1.7    prototype     2.70 s       962 MB    7,907 KB
+  PDF/UA-1   Typst today   2.69 s       955 MB    7,927 KB
+  PDF/UA-1   prototype     2.73 s       961 MB    7,927 KB
+  PDF 2.0    Typst today   2.67 s       955 MB    8,175 KB
+  PDF 2.0    prototype     2.72 s       969 MB    9,305 KB
+  PDF/UA-2   prototype     2.75 s       967 MB    9,328 KB
+
+  The PDF 2.0 files are larger than in the first run (8,656 and 8,678 KB) because each link
+  now carries a page destination in D as well as the structure destination in SD.
 
 Cost on the mathematics document (five interleaved rounds, best time)
   export     build         time    peak memory    PDF size
-  PDF 1.7    Typst today   0.54 s       202 MB    2,976 KB
-  PDF 1.7    prototype     0.55 s       203 MB    2,976 KB
-  PDF/UA-1   Typst today   0.61 s       213 MB    3,193 KB
-  PDF/UA-1   prototype     0.61 s       214 MB    3,193 KB
-  PDF 2.0    Typst today   0.55 s       203 MB    3,020 KB
-  PDF 2.0    prototype     0.55 s       203 MB    3,024 KB
-  PDF/UA-2   prototype     0.84 s       229 MB    5,443 KB
+  PDF 1.7    Typst today   0.54 s       201 MB    2,976 KB
+  PDF 1.7    prototype     0.57 s       202 MB    2,976 KB
+  PDF/UA-1   Typst today   0.64 s       212 MB    3,193 KB
+  PDF/UA-1   prototype     0.63 s       213 MB    3,193 KB
+  PDF 2.0    Typst today   0.54 s       201 MB    3,020 KB
+  PDF 2.0    prototype     0.55 s       202 MB    3,026 KB
+  PDF/UA-2   prototype     0.82 s       229 MB    5,445 KB
 
   MathML is only made when ua-2 is asked for. In an earlier run, when it was made for
   every export, PDF 1.7 took 1.05 s here instead of 0.58 s, and without sharing the work
@@ -91,6 +99,13 @@ paragraph (it was split at the link before, which veraPDF did not object to).
 
 Not done from that reading: a heading inside a table cell, a list item, a quote or a figure
 does not open a section.
+
+Reviewed on 22 October, again with Claude, and fixed on the branches: links and bookmarks put
+the heading in place of the page (now a go-to action with the page in D and the heading in
+SD); a link to something in a page header or footer led to a tag that is never written;
+`typst watch` did not make MathML; an equation that could not be converted gave no reason
+(now a warning); and a custom contents filler became an artifact in every PDF, not only in
+PDF 2.0. veraPDF passed all of these before the fixes.
 
 Not done at all: no screen reader has been tried, on the tags or on the MathML, and
 nobody who knows the PDF specification well has reviewed the code.
