@@ -7,7 +7,8 @@ veraPDF. The code was written with Claude, an AI assistant. It has not been revi
 anyone who knows the PDF specification well, and it is not offered to Typst as a pull
 request, since Typst does not accept AI-written code.
 
-- `index.html`: the page.
+- `index.html` and `style.css`: the page. Its Content Security Policy lets it load nothing but
+  its own stylesheet, so keep styles in `style.css`, not in `<style>` or `style=` in the page.
 - `pdf/`: the same documents exported by Typst today and by the prototype.
 - `documents/`: the demo, 36 one-feature documents, a test of the thesis template's heading
   levels, and the generators for the 373-page document and for a document of equations.
